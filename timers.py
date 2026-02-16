@@ -18,10 +18,17 @@ class TimeframeSyncWidget:
 
         # Window setup
         self.root.title("Timeframe Sync")
-        self.root.attributes('-topmost', True)
-        self.root.attributes('-alpha', 0.95)
+        self.root.geometry("780x160")
         self.root.configure(bg='#1a1a1a')
-        
+
+        # STRONG ALWAYS ON TOP
+        self.root.attributes('-topmost', True)
+        self.root.lift()
+        self.root.after(1000, self.keep_on_top)
+
+        # Slight transparency
+        self.root.attributes('-alpha', 0.95)
+
         # Bindings: Left Click to Move, Right Click to Resize
         self.root.bind('<Button-1>', self.init_move)
         self.root.bind('<B1-Motion>', self.move_window)
@@ -58,6 +65,11 @@ class TimeframeSyncWidget:
         self.create_widgets()
         self.update_clock()
     
+    def keep_on_top(self):
+        self.root.attributes('-topmost', True)
+        self.root.lift()
+        self.root.after(1000, self.keep_on_top)
+
     def create_widgets(self):
         # Main wrapper
         self.outer_frame = tk.Frame(self.root, bg='#1a1a1a')
@@ -241,3 +253,4 @@ if __name__ == "__main__":
     root.geometry("780x160")
     app = TimeframeSyncWidget(root)
     root.mainloop()
+
