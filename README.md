@@ -1,13 +1,10 @@
 > [!TIP]
-> Example Image Of Local App
+> # Example Image Of Local App
 > <img width="969" height="206" alt="image" src="https://github.com/user-attachments/assets/d273a7c5-1f57-4584-a2ef-ffa473d6cec1" />
 
 > [!TIP]
-> Example Image Of Online App
+> # Example Image Of Online App
 > ![example](https://github.com/user-attachments/assets/ea3a4156-b1da-41fc-ab64-ed798b16601c)
-
-# Example Image Of Online App
-
 
 ---
 
