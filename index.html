@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Timeframe Sync</title>
+
+<style>
+:root {
+  --bg: #d8cbbd;
+  --text: #1a1a1a;
+  --muted: #7a6f63;
+  --accent: #000;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  font-family: "Georgia", serif;
+  color: var(--text);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.wrapper {
+  width: 90%;
+  max-width: 1100px;
+  text-align: center;
+}
+
+h1 {
+  font-size: 42px;
+  letter-spacing: 2px;
+  margin-bottom: 40px;
+}
+
+.timeframes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 40px;
+}
+
+.tf {
+  cursor: pointer;
+  text-align: center;
+  min-width: 80px;
+}
+
+.tf-label {
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: var(--muted);
+}
+
+.tf-time {
+  font-size: 26px;
+  margin-top: 5px;
+}
+
+.progress {
+  margin-top: 8px;
+  height: 2px;
+  background: rgba(0,0,0,0.2);
+  position: relative;
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--accent);
+  width: 0%;
+}
+
+.alert {
+  margin-top: 50px;
+  font-size: 16px;
+  letter-spacing: 2px;
+}
+
+.session {
+  margin-top: 40px;
+  font-size: 18px;
+  letter-spacing: 1px;
+}
+</style>
+</head>
+
+<body>
+<div class="wrapper">
+  <h1>TIMEFRAME SYNC</h1>
+
+  <div class="timeframes" id="timeframes"></div>
+
+  <div class="alert" id="alert"></div>
+  <div class="session" id="session"></div>
+</div>
+
+<script>
+const TIMEFRAMES = [
+  { label: "1M", s: 60 },
+  { label: "5M", s: 300 },
+  { label: "15M", s: 900 },
+  { label: "30M", s: 1800 },
+  { label: "1H", s: 3600 },
+  { label: "2H", s: 7200 },
+  { label: "4H", s: 14400 },
+  { label: "6H", s: 21600 },
+  { label: "1D", s: 86400 },
+];
+
+const SESSIONS = [
+  { name: "ASIA", start: "20:00", end: "03:00" },
+  { name: "LONDON", start: "03:00", end: "08:30" },
+  { name: "NEW YORK", start: "08:30", end: "16:00" },
+];
+
+let armedIndex = null;
+
+const container = document.getElementById("timeframes");
+const alertBox = document.getElementById("alert");
+const sessionBox = document.getElementById("session");
+
+TIMEFRAMES.forEach((tf, i) => {
+  const div = document.createElement("div");
+  div.className = "tf";
+  div.innerHTML = `
+    <div class="tf-label">${tf.label}</div>
+    <div class="tf-time" id="time-${i}">00:00</div>
+    <div class="progress">
+      <div class="progress-bar" id="bar-${i}"></div>
+    </div>
+  `;
+  div.onclick = () => {
+    armedIndex = armedIndex === i ? null : i;
+    alertBox.textContent = armedIndex !== null
+      ? `ALERT ARMED — ${TIMEFRAMES[armedIndex].label}`
+      : "";
+  };
+  container.appendChild(div);
+});
+
+function update() {
+  const now = Date.now() / 1000;
+
+  TIMEFRAMES.forEach((tf, i) => {
+    const rem = tf.s - (Math.floor(now) % tf.s);
+
+    const h = Math.floor(rem / 3600);
+    const m = Math.floor((rem % 3600) / 60);
+    const s = Math.floor(rem % 60);
+
+    const display = h > 0
+      ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`
+      : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+    document.getElementById(`time-${i}`).textContent = display;
+
+    const progress = ((tf.s - rem) / tf.s) * 100;
+    document.getElementById(`bar-${i}`).style.width = progress + "%";
+
+    if (armedIndex === i && rem === 1) {
+      const audio = new Audio("beep.wav");
+      audio.play();
+      alertBox.textContent = "";
+      armedIndex = null;
+    }
+  });
+
+  updateSession();
+}
+
+function updateSession() {
+  const now = new Date();
+  const minutes = now.getUTCHours() * 60 + now.getUTCMinutes();
+
+  let active = null;
+
+  SESSIONS.forEach(s => {
+    const [sh, sm] = s.start.split(":").map(Number);
+    const [eh, em] = s.end.split(":").map(Number);
+
+    const start = sh * 60 + sm;
+    const end = eh * 60 + em;
+
+    if (start < end) {
+      if (minutes >= start && minutes < end) active = s;
+    } else {
+      if (minutes >= start || minutes < end) active = s;
+    }
+  });
+
+  sessionBox.textContent = active
+    ? `SESSION — ${active.name}`
+    : "";
+}
+
+setInterval(update, 1000);
+update();
+</script>
+
+</body>
+</html>
