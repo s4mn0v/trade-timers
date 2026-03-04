@@ -91,7 +91,7 @@ Create a `.desktop` file in the right location:
 
 ```bash
 mkdir -p ~/.local/share/applications
-nano ~/.local/share/applications/myapp.desktop
+nano ~/.local/share/applications/tradingtimers.desktop
 ```
 
 Copy and paste this template into the editor:
