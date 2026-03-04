@@ -34,12 +34,18 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
+Linux
+
 ```bash
-pip install pyinstaller
+pip install pygame pyinstaller
 ```
 
 ```bash
-pyinstaller -F your_script.py
+pyinstaller -F timers.py \
+--add-data "beep.wav:." \
+--hidden-import=pygame \
+--hidden-import=pygame.mixer \
+--collect-all pygame
 ```
 
 When done, deactivate env
@@ -48,53 +54,9 @@ When done, deactivate env
 deactivate
 ```
 
-# Requirements
-
-This app requires:
-
-- Python 3.10+
-- tkinter (usually preinstalled)
-- pygame (for sound alerts)
-
-Install pygame:
-
-```bash
-pip install pygame
-```
-
 ---
 
-# Linux (Ubuntu)
-
-Install pipx first
-
-```bash
-sudo apt update
-```
-
-```bash
-sudo apt install pipx
-```
-
-```bash
-pipx ensurepath
-```
-
-Then install pyinstaller with pipx
-
-```bash
-pipx install pyinstaller
-```
-
-```bash
-sudo apt install python3-tk
-```
-
-Then try the step (Create the app with pyinstaller)
-
----
-
-# How to Make Your Python Binary a Visible App in Ubuntu
+# How to Make Your Python Binary a Visible App in Linux
 
 ## Step 1: Create an Applications Folder
 
@@ -108,6 +70,12 @@ Move your binary file into this folder:
 
 ```bash
 mv /path/to/your/binary ~/Applications/
+```
+
+example path
+
+```
+/home/user/folder/TradingTimers/dist/timers
 ```
 
 ---
@@ -126,7 +94,7 @@ Copy and paste this template into the editor:
 ```bash
 [Desktop Entry]
 Type=Application
-Name=My App
+Name=Trading Timers
 Exec=/home/YOUR_USERNAME/Applications/your-binary-name
 Icon=/home/YOUR_USERNAME/Applications/icon.png
 Terminal=false
