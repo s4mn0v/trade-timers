@@ -126,7 +126,7 @@ Save and exit:
 Make the launcher file executable:
 
 ```bash
-chmod +x ~/.local/share/applications/myapp.desktop
+chmod +x ~/.local/share/applications/tradingtimers.desktop
 ```
 
 Refresh the application menu:
