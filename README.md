@@ -105,6 +105,8 @@ Icon=/home/YOUR_USERNAME/Applications/icon.png
 Terminal=false
 Categories=Utility;
 ```
+> You can use the [icon.png](./icon.png) storage in this repo
+> Icon=/home/YOUR_USERNAME/Applications/icon.png
 
 **Important changes you must make:**
 
