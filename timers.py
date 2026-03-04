@@ -2,6 +2,19 @@ import tkinter as tk
 import time
 from datetime import datetime, timezone, timedelta
 import pygame
+import sys
+import os
+
+# ---------------- RESOURCE PATH (PYINSTALLER SAFE) ---------------- #
+
+def resource_path(relative_path):
+    """ Get absolute path to resource (works for dev and PyInstaller) """
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
 
 class TimeframeSyncWidget:
     def __init__(self, root):
@@ -9,10 +22,10 @@ class TimeframeSyncWidget:
 
         # ---------------- SOUND INIT ---------------- #
         pygame.mixer.init()
-        self.sound = pygame.mixer.Sound("beep.wav")
+        self.sound = pygame.mixer.Sound(resource_path("beep.wav"))
         # ------------------------------------------------ #
 
-        self.armed_timer = None  # only one armed at a time
+        self.armed_timer = None
 
         self.base_width = 780
         self.base_height = 160
@@ -50,9 +63,9 @@ class TimeframeSyncWidget:
         ]
 
         self.SESSIONS = [
-            {"name": "Asia", "start": "20:00", "end": "03:00", "color": "#3b82f6", "bg": "#1e3a8a"},
-            {"name": "London", "start": "03:00", "end": "08:30", "color": "#f59e0b", "bg": "#78350f"},
-            {"name": "New York", "start": "08:30", "end": "16:00", "color": "#10b981", "bg": "#064e3b"},
+            {"name": "Asia", "start": "20:00", "end": "03:00", "bg": "#1e3a8a"},
+            {"name": "London", "start": "03:00", "end": "08:30", "bg": "#78350f"},
+            {"name": "New York", "start": "08:30", "end": "16:00", "bg": "#064e3b"},
         ]
 
         self.tf_labels = []
@@ -77,28 +90,23 @@ class TimeframeSyncWidget:
             label = self.TIMEFRAMES[index]["label"]
             self.alert_label.config(text=f"🔔 {label}")
 
-    # --------------------------------------- #
+
+    # ------------ Keep On top ----------- #
 
     def keep_on_top(self):
         self.root.attributes('-topmost', True)
         self.root.lift()
         self.root.after(1000, self.keep_on_top)
-
+    
     # ---------------- UI ---------------- #
 
     def create_widgets(self):
         self.outer_frame = tk.Frame(self.root, bg='#1a1a1a')
         self.outer_frame.pack(fill=tk.BOTH, expand=True)
 
-        self.btn_close = tk.Label(self.root, text="×", bg='#1a1a1a',
-                                  fg='#555555', font=('Arial', 14))
-        self.btn_close.place(relx=1.0, x=-10, y=5, anchor='ne')
-        self.btn_close.bind("<Button-1>", lambda e: self.root.quit())
-
         self.center_content = tk.Frame(self.outer_frame, bg='#1a1a1a')
         self.center_content.place(relx=0.5, rely=0.5, anchor='center')
 
-        # -------- Timeframes -------- #
         self.tf_row = tk.Frame(self.center_content, bg='#1a1a1a')
         self.tf_row.pack(pady=5)
 
@@ -124,7 +132,7 @@ class TimeframeSyncWidget:
 
             sec = tk.Label(t_frame, text="", bg='#1a1a1a',
                            fg='#666666', font=('Courier New', 10))
-            sec.pack(side=tk.LEFT, pady=(4, 0))
+            sec.pack(side=tk.LEFT)
             self.tf_seconds.append(sec)
 
             pb_bg = tk.Frame(f, bg='#333333', width=60, height=3)
@@ -135,12 +143,10 @@ class TimeframeSyncWidget:
 
             self.progress_bars.append({'bg': pb_bg, 'fg': pb_fg, 'base_w': 60})
 
-        # Divider
         self.divider = tk.Frame(self.center_content,
                                 bg='#333333', height=1)
         self.divider.pack(fill=tk.X, pady=12, padx=20)
 
-        # -------- Session Row -------- #
         self.session_row = tk.Frame(self.center_content, bg='#1a1a1a')
         self.session_row.pack()
 
@@ -163,34 +169,6 @@ class TimeframeSyncWidget:
                                       fg='#ffffff',
                                       font=('Courier New', 12, 'bold'))
         self.session_timer.pack(side=tk.LEFT)
-
-    # ---------------- RESIZE ---------------- #
-
-    def on_window_resize(self, event):
-        if event.widget != self.root:
-            return
-
-        scale_w = self.root.winfo_width() / self.base_width
-        scale_h = self.root.winfo_height() / self.base_height
-        scale = min(scale_w, scale_h)
-
-        for lbl in self.tf_labels:
-            lbl.config(font=('Arial', int(9 * scale), 'bold'))
-        for t in self.tf_timers:
-            t.config(font=('Courier New', int(16 * scale), 'bold'))
-        for sec in self.tf_seconds:
-            sec.config(font=('Courier New', int(10 * scale)))
-
-        for pb in self.progress_bars:
-            new_width = int(pb['base_w'] * scale)
-            pb['bg'].config(width=new_width,
-                            height=max(2, int(3 * scale)))
-
-        self.badge.config(font=('Arial', int(9 * scale), 'bold'))
-        self.session_timer.config(font=('Courier New',
-                                        int(12 * scale), 'bold'))
-        self.alert_label.config(font=('Arial',
-                                      int(10 * scale), 'bold'))
 
     # ---------------- CLOCK ---------------- #
 
@@ -218,7 +196,10 @@ class TimeframeSyncWidget:
             current_max_w = self.progress_bars[i]['bg'].winfo_width()
             self.progress_bars[i]['fg'].config(width=int(prog * current_max_w))
 
-        # -------- Session Logic -------- #
+        self.update_session()
+        self.root.after(1000, self.update_clock)
+
+    def update_session(self):
         now = datetime.now(timezone.utc)
         ny = now - timedelta(hours=4)
 
@@ -244,14 +225,12 @@ class TimeframeSyncWidget:
             rem_m = (eh * 60 + em - cur_m + 1440) % 1440
             tot_s = (rem_m * 60) - cur_s
             self.badge.config(text=active["name"].upper(),
-                              bg=active["bg"], fg='#ffffff')
+                              bg=active["bg"])
             self.session_timer.config(
                 text=f"Ends in: {tot_s//3600}h {(tot_s%3600)//60:02d}m {tot_s%60:02d}s")
         else:
-            self.badge.config(text="---", bg='#333333', fg='#ffffff')
+            self.badge.config(text="---", bg='#333333')
             self.session_timer.config(text="--h --m --s")
-
-        self.root.after(1000, self.update_clock)
 
     # ---------------- MOVE & RESIZE ---------------- #
 
@@ -276,6 +255,27 @@ class TimeframeSyncWidget:
         new_w = max(400, self.start_w + diff_x)
         new_h = max(100, self.start_h + diff_y)
         self.root.geometry(f"{new_w}x{new_h}")
+
+    def on_window_resize(self, event):
+        if event.widget != self.root:
+            return
+
+        scale_w = self.root.winfo_width() / self.base_width
+        scale_h = self.root.winfo_height() / self.base_height
+        scale = min(scale_w, scale_h)
+
+        for lbl in self.tf_labels:
+            lbl.config(font=('Arial', int(9 * scale), 'bold'))
+        for t in self.tf_timers:
+            t.config(font=('Courier New', int(16 * scale), 'bold'))
+        for sec in self.tf_seconds:
+            sec.config(font=('Courier New', int(10 * scale)))
+
+        self.badge.config(font=('Arial', int(9 * scale), 'bold'))
+        self.session_timer.config(font=('Courier New',
+                                        int(12 * scale), 'bold'))
+        self.alert_label.config(font=('Arial',
+                                      int(10 * scale), 'bold'))
 
 
 if __name__ == "__main__":
