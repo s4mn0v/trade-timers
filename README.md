@@ -57,6 +57,8 @@ deactivate
 ---
 
 # How to Make Your Python Binary a Visible App in Linux
+<details>
+  <summary>Show Steps</summary>
 
 ## Step 1: Create an Applications Folder
 
@@ -145,3 +147,5 @@ Press the **Super key** (Windows key) and search for your app by the name you ch
 | App doesn't appear in menu | Run `update-desktop-database ~/.local/share/applications/` again |
 | App appears but won't launch | Check that the `Exec` path in your `.desktop` file is the **full absolute path** to your binary |
 | No icon | Either add a `.png` icon file to your Applications folder and set the `Icon` path, or delete the `Icon=` line entirely |
+
+</details>
