@@ -1,208 +1,345 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Timeframe Sync</title>
-
-<style>
-:root {
-  --bg: #d8cbbd;
-  --text: #1a1a1a;
-  --muted: #7a6f63;
-  --accent: #000;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  background: var(--bg);
-  font-family: "Georgia", serif;
-  color: var(--text);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-
-.wrapper {
-  width: 90%;
-  max-width: 1100px;
-  text-align: center;
-}
-
-h1 {
-  font-size: 42px;
-  letter-spacing: 2px;
-  margin-bottom: 40px;
-}
-
-.timeframes {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 40px;
-}
-
-.tf {
-  cursor: pointer;
-  text-align: center;
-  min-width: 80px;
-}
-
-.tf-label {
-  font-size: 14px;
-  letter-spacing: 2px;
-  color: var(--muted);
-}
-
-.tf-time {
-  font-size: 26px;
-  margin-top: 5px;
-}
-
-.progress {
-  margin-top: 8px;
-  height: 2px;
-  background: rgba(0,0,0,0.2);
-  position: relative;
-}
-
-.progress-bar {
-  height: 100%;
-  background: var(--accent);
-  width: 0%;
-}
-
-.alert {
-  margin-top: 50px;
-  font-size: 16px;
-  letter-spacing: 2px;
-}
-
-.session {
-  margin-top: 40px;
-  font-size: 18px;
-  letter-spacing: 1px;
-}
-</style>
-</head>
-
-<body>
-<div class="wrapper">
-  <h1>TIMEFRAME SYNC</h1>
-
-  <div class="timeframes" id="timeframes"></div>
-
-  <div class="alert" id="alert"></div>
-  <div class="session" id="session"></div>
-</div>
-
-<script>
-const TIMEFRAMES = [
-  { label: "1M", s: 60 },
-  { label: "5M", s: 300 },
-  { label: "15M", s: 900 },
-  { label: "30M", s: 1800 },
-  { label: "1H", s: 3600 },
-  { label: "2H", s: 7200 },
-  { label: "4H", s: 14400 },
-  { label: "6H", s: 21600 },
-  { label: "1D", s: 86400 },
-];
-
-const SESSIONS = [
-  { name: "ASIA", start: "20:00", end: "03:00" },
-  { name: "LONDON", start: "03:00", end: "08:30" },
-  { name: "NEW YORK", start: "08:30", end: "16:00" },
-];
-
-let armedIndex = null;
-
-const container = document.getElementById("timeframes");
-const alertBox = document.getElementById("alert");
-const sessionBox = document.getElementById("session");
-
-TIMEFRAMES.forEach((tf, i) => {
-  const div = document.createElement("div");
-  div.className = "tf";
-  div.innerHTML = `
-    <div class="tf-label">${tf.label}</div>
-    <div class="tf-time" id="time-${i}">00:00</div>
-    <div class="progress">
-      <div class="progress-bar" id="bar-${i}"></div>
-    </div>
-  `;
-  div.onclick = () => {
-    armedIndex = armedIndex === i ? null : i;
-    alertBox.textContent = armedIndex !== null
-      ? `ALERT ARMED — ${TIMEFRAMES[armedIndex].label}`
-      : "";
-  };
-  container.appendChild(div);
-});
-
-function update() {
-  const now = Date.now() / 1000;
-
-  TIMEFRAMES.forEach((tf, i) => {
-    const rem = tf.s - (Math.floor(now) % tf.s);
-
-    const h = Math.floor(rem / 3600);
-    const m = Math.floor((rem % 3600) / 60);
-    const s = Math.floor(rem % 60);
-
-    const display = h > 0
-      ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`
-      : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-
-    document.getElementById(`time-${i}`).textContent = display;
-
-    const progress = ((tf.s - rem) / tf.s) * 100;
-    document.getElementById(`bar-${i}`).style.width = progress + "%";
-
-    if (armedIndex === i && rem === 1) {
-      const audio = new Audio("beep.wav");
-      audio.play();
-      alertBox.textContent = "";
-      armedIndex = null;
-    }
-  });
-
-  updateSession();
-}
-
-function updateSession() {
-  const now = new Date();
-  const minutes = now.getUTCHours() * 60 + now.getUTCMinutes();
-
-  let active = null;
-
-  SESSIONS.forEach(s => {
-    const [sh, sm] = s.start.split(":").map(Number);
-    const [eh, em] = s.end.split(":").map(Number);
-
-    const start = sh * 60 + sm;
-    const end = eh * 60 + em;
-
-    if (start < end) {
-      if (minutes >= start && minutes < end) active = s;
-    } else {
-      if (minutes >= start || minutes < end) active = s;
-    }
-  });
-
-  sessionBox.textContent = active
-    ? `SESSION — ${active.name}`
-    : "";
-}
-
-setInterval(update, 1000);
-update();
-</script>
-
-</body>
+<html class="light" lang="en" id="main-html">
+   <head>
+      <meta charset="utf-8"/>
+      <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+      <title>TIMEFRAME SYNC // ANALOG_ANARCHIST</title>
+      <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+      <link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;700;900&family=Work+Sans:wght@400;600&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet"/>
+      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+      <script id="tailwind-config">
+         tailwind.config = {
+             darkMode: "class",
+             theme: {
+                 extend: {
+                     colors: {
+                         // Zen Palette
+                         "zen-bg": "#fff9ed",
+                         "zen-surface": "#f6eed5",
+                         "zen-primary": "#2d422c",
+                         "zen-shadow": "#ebe2ca",
+                         // Chaos Palette
+                         "chaos-bg": "#0e0e0e",
+                         "chaos-surface": "#1f2020",
+                         "chaos-primary": "#9cff93",
+                         "chaos-secondary": "#ff51fa",
+                     },
+                     fontFamily: {
+                         "headline": ["Epilogue", "Space Grotesk", "sans-serif"],
+                         "body": ["Work Sans", "Newsreader", "serif"],
+                     },
+                 },
+             },
+         }
+      </script>
+      <style>
+         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+         /* Textures */
+         .noise-overlay {
+         background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+         opacity: 0.05; pointer-events: none; position: fixed; inset: 0; z-index: 50;
+         }
+         /* Transitions */
+         .theme-transition { transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease; }
+         /* Custom Shadows */
+         .zen-card { shadow: 8px 8px 0px 0px #ebe2ca; }
+         .chaos-card { shadow: 12px 12px 0px 0px #ff51fa; }
+         @keyframes impact-flash {
+         0% { background-color: #ff51fa; transform: scale(1) rotate(-1deg); }
+         50% { background-color: #fff; transform: scale(1.05) rotate(1deg); }
+         100% { background-color: #ff51fa; transform: scale(1) rotate(-1deg); }
+         }
+         .alert-active { animation: impact-flash 0.5s infinite !important; }
+         /* Hide scrollbars but keep functionality */
+         .custom-y-scroll::-webkit-scrollbar { width: 4px; }
+         .custom-y-scroll::-webkit-scrollbar-thumb { background: currentColor; opacity: 0.2; }
+      </style>
+   </head>
+   <body class="bg-zen-bg text-[#1f1c0c] font-body theme-transition min-h-screen" id="app-body">
+      <div class="noise-overlay"></div>
+      <header class="flex justify-between items-center w-full px-6 py-4 sticky top-0 z-40 border-b border-black/5 bg-white/50 backdrop-blur-md" id="main-header">
+         <div class="flex items-center gap-4">
+            <div class="italic tracking-tighter">
+               <h1 class="font-headline font-black text-2xl lg:text-3xl leading-none uppercase" id="brand-title">TIMEFRAME</h1>
+               <p class="text-[10px] tracking-[0.4em] opacity-50 font-headline uppercase" id="brand-sub">Zen_Mode_v.01</p>
+            </div>
+         </div>
+         <div class="flex items-center gap-4 lg:gap-6">
+            <button onclick="toggleTheme()" class="group flex items-center gap-2 px-3 py-1 border-2 border-current hover:bg-black hover:text-white transition-all rounded-full">
+            <span class="material-symbols-outlined text-xl" id="theme-icon">bolt</span>
+            <span class="font-headline text-[10px] font-bold uppercase hidden sm:block" id="theme-text">Chaos Mode</span>
+            </button>
+            <a href="https://github.com/s4mn0v/ascii-tree-generator" target="_blank" class="hover:opacity-60 transition-all">
+               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.39.6.11.82-.26.82-.58 0-.29-.01-1.06-.02-2.08-3.34.73-4.04-1.61-4.04-1.61-.55-1.4-1.34-1.77-1.34-1.77 -1.1-.75.08-.74.08-.74 1.22.09 1.86 1.25 1.86 1.25 1.08 1.85 2.83 1.32 3.52 1.01 .11-.78.42-1.32.76-1.62-2.67-.3-5.47-1.34-5.47-5.93 0-1.31.47-2.38 1.24-3.22 -.12-.3-.54-1.52.12-3.17 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.66 1.65.24 2.87.12 3.17.77.84 1.24 1.91 1.24 3.22 0 4.6-2.8 5.63-5.48 5.93.43.37.81 1.1.81 2.22 0 1.6-.01 2.88-.01 3.27 0 .32.21.7.83.58C20.56 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/>
+               </svg>
+            </a>
+         </div>
+      </header>
+      <main class="p-6 lg:p-12 max-w-7xl mx-auto space-y-12">
+         <div id="session-banner" class="relative py-8 -rotate-1 transition-all duration-500">
+            <div id="session-bg" class="absolute inset-0 bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,0.05)] transition-all"></div>
+            <div class="relative flex justify-center items-center px-8 z-10 text-center">
+               <h2 id="session-label" class="font-headline font-black text-3xl lg:text-6xl tracking-tighter uppercase italic">
+                  CALCULATING...
+               </h2>
+            </div>
+         </div>
+         <div id="timer-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10"></div>
+      </main>
+      <div id="add-modal" class="fixed inset-0 bg-black/40 backdrop-blur-md z-[60] hidden flex items-center justify-center p-4">
+         <div id="modal-box" class="bg-zen-bg border-4 border-black p-6 lg:p-10 max-w-2xl w-full shadow-[20px_20px_0px_0px_rgba(0,0,0,0.1)] relative transition-all">
+            <div class="relative z-10">
+               <div class="flex justify-between items-start mb-6">
+                  <div>
+                     <h3 class="font-headline font-black text-3xl uppercase italic" id="modal-title">NODE_CONTROLLER</h3>
+                     <p class="text-[10px] uppercase tracking-[0.4em] opacity-60">Synchronicity Management</p>
+                  </div>
+                  <button onclick="closeModal()" class="hover:rotate-90 transition-transform"><span class="material-symbols-outlined text-4xl">close</span></button>
+               </div>
+               <div id="master-node-list" class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8 max-h-[30vh] overflow-y-auto pr-2 custom-y-scroll"></div>
+               <div class="p-4 border-2 border-dashed border-current/20 mb-8">
+                  <p class="text-[10px] mb-3 uppercase font-bold tracking-widest opacity-60">Add Custom Node (E.G. 45M, 3H)</p>
+                  <div class="flex gap-2">
+                     <input type="text" id="tf-input" class="flex-1 bg-transparent border-2 border-current p-3 font-headline font-bold outline-none" placeholder="10M">
+                     <button onclick="addNewPreset()" class="bg-black text-white px-8 font-headline font-black uppercase hover:opacity-80 transition-all">ADD</button>
+                  </div>
+               </div>
+               <button onclick="closeModal()" class="w-full bg-black text-white py-4 font-headline font-black uppercase tracking-tighter hover:opacity-80 transition-all">
+               SAVE_&_SYNC
+               </button>
+            </div>
+         </div>
+      </div>
+      <button id="fab" onclick="openModal()" class="fixed bottom-8 right-8 w-16 h-16 bg-black text-white flex items-center justify-center shadow-[6px_6px_0px_0px_rgba(0,0,0,0.2)] hover:scale-110 active:scale-95 transition-transform z-50 rounded-full">
+      <span class="material-symbols-outlined text-4xl">add</span>
+      </button>
+      <script>
+         let currentTheme = 'zen'; // Default theme
+         
+         const CHAOS_COLORS = [
+             { hex: '#9cff93', rgba: 'rgba(156,255,147,1)' },
+             { hex: '#ff51fa', rgba: 'rgba(255,81,250,1)' },
+             { hex: '#fffeac', rgba: 'rgba(255,254,172,1)' },
+             { hex: '#ff7351', rgba: 'rgba(255,115,81,1)' }
+         ];
+         
+         let MASTER_TIMEFRAMES = [
+             { label: "1M", s: 60 }, { label: "5M", s: 300 }, { label: "15M", s: 900 },
+             { label: "30M", s: 1800 }, { label: "1H", s: 3600 }, { label: "4H", s: 14400 },
+             { label: "1D", s: 86400 }
+         ];
+         
+         let ACTIVE_LABELS = ["1M", "5M", "15M", "1H", "1D"];
+         let armedIndex = null;
+         
+         const SESSIONS = [
+             { name: "ASIA", start: "00:00", end: "09:00", zen: "#f6eed5", chaos: "#FFFEAC" },
+             { name: "LONDON", start: "08:00", end: "16:30", zen: "#d1e9cb", chaos: "#9CFF93" },
+             { name: "NEW YORK", start: "13:30", end: "21:00", zen: "#e7d1e7", chaos: "#FF51FA" },
+         ];
+         
+         // --- THEME TOGGLE LOGIC ---
+         function toggleTheme() {
+             currentTheme = currentTheme === 'zen' ? 'chaos' : 'zen';
+             const html = document.getElementById('main-html');
+             const body = document.getElementById('app-body');
+             const icon = document.getElementById('theme-icon');
+             const text = document.getElementById('theme-text');
+             const brandSub = document.getElementById('brand-sub');
+         
+             if (currentTheme === 'chaos') {
+                 html.classList.add('dark');
+                 body.className = "bg-chaos-bg text-white font-headline theme-transition min-h-screen";
+                 icon.textContent = "flare";
+                 text.textContent = "Zen Mode";
+                 brandSub.textContent = "Chaos_System_v.01";
+                 document.getElementById('fab').className = "fixed bottom-8 right-8 w-16 h-16 bg-secondary text-white flex items-center justify-center shadow-[6px_6px_0px_0px_rgba(255,254,172,1)] hover:scale-110 active:scale-95 transition-transform z-50";
+             } else {
+                 html.classList.remove('dark');
+                 body.className = "bg-zen-bg text-[#1f1c0c] font-body theme-transition min-h-screen";
+                 icon.textContent = "bolt";
+                 text.textContent = "Chaos Mode";
+                 brandSub.textContent = "Zen_Mode_v.01";
+                 document.getElementById('fab').className = "fixed bottom-8 right-8 w-16 h-16 bg-black text-white flex items-center justify-center shadow-[6px_6px_0px_0px_rgba(0,0,0,0.2)] hover:scale-110 active:scale-95 transition-transform z-50 rounded-full";
+             }
+         
+             renderDashboard();
+             updateSessionDisplay();
+         }
+         
+         function renderDashboard() {
+             const grid = document.getElementById('timer-grid');
+             grid.innerHTML = '';
+             const activeData = MASTER_TIMEFRAMES.filter(t => ACTIVE_LABELS.includes(t.label));
+         
+             activeData.forEach((tf, i) => {
+                 const card = document.createElement('div');
+                 const rotate = i % 2 === 0 ? 'rotate-1' : '-rotate-1';
+         
+                 if (currentTheme === 'zen') {
+                     card.className = `group relative bg-zen-surface p-8 shadow-[8px_8px_0px_0px_#ebe2ca] transition-all cursor-pointer ${rotate} hover:rotate-0 hover:translate-x-1 hover:translate-y-1 hover:shadow-none`;
+                     card.innerHTML = `
+                         <div class="flex justify-between items-start mb-8">
+                             <span class="font-headline text-4xl font-black text-zen-primary">${tf.label}</span>
+                             <div id="arm-dot-${i}" class="w-3 h-3 rounded-full border border-black/10"></div>
+                         </div>
+                         <h3 id="time-${i}" class="font-headline font-black text-6xl text-zen-primary italic tabular-nums">00:00</h3>
+                         <div class="mt-8 bg-black/5 h-2 w-full relative overflow-hidden">
+                             <div id="bar-${i}" class="absolute inset-y-0 left-0 bg-zen-primary w-0 transition-all duration-1000"></div>
+                         </div>
+                     `;
+                 } else {
+                     const chaosTheme = CHAOS_COLORS[i % CHAOS_COLORS.length];
+                     card.className = `group relative bg-chaos-surface p-8 transition-all cursor-pointer border-0 overflow-hidden ${rotate} hover:rotate-0`;
+                     card.style.boxShadow = `12px 12px 0px 0px ${chaosTheme.rgba}`;
+                     card.innerHTML = `
+                         <div class="absolute top-2 right-2"><div id="arm-dot-${i}" class="w-4 h-4 border-2 border-white/20"></div></div>
+                         <p class="text-[10px] font-bold tracking-[0.4em] mb-2 uppercase" style="color: ${chaosTheme.hex}">SYNC_NODE_${tf.label}</p>
+                         <h3 id="time-${i}" class="font-headline font-black text-6xl tabular-nums" style="color: ${chaosTheme.hex}">00:00</h3>
+                         <div class="mt-6 flex justify-between items-center">
+                             <span class="font-headline text-2xl font-black opacity-40 italic" style="color: ${chaosTheme.hex}">${tf.label}</span>
+                             <div class="h-2 w-24 bg-black border border-white/10 overflow-hidden">
+                                 <div id="bar-${i}" class="h-full" style="width: 0%; background-color: ${chaosTheme.hex}"></div>
+                             </div>
+                         </div>
+                     `;
+                 }
+         
+                 card.onclick = () => toggleArm(i, tf.label, activeData.length);
+                 grid.appendChild(card);
+             });
+         }
+         
+         // --- CORE LOGIC (SHARED) ---
+         function toggleNode(label) {
+             ACTIVE_LABELS = ACTIVE_LABELS.includes(label) ? ACTIVE_LABELS.filter(l => l !== label) : [...ACTIVE_LABELS, label];
+             renderModalList();
+         }
+         
+         function renderModalList() {
+             const list = document.getElementById('master-node-list');
+             const modalBox = document.getElementById('modal-box');
+             list.innerHTML = '';
+         
+             // Adjust modal style
+             if(currentTheme === 'chaos') {
+                 modalBox.className = "bg-chaos-surface border-4 border-chaos-primary p-6 lg:p-10 max-w-2xl w-full shadow-[20px_20px_0px_0px_#ff51fa] relative text-white";
+             } else {
+                 modalBox.className = "bg-zen-bg border-4 border-black p-6 lg:p-10 max-w-2xl w-full shadow-[20px_20px_0px_0px_rgba(0,0,0,0.1)] relative text-black";
+             }
+         
+             MASTER_TIMEFRAMES.forEach(tf => {
+                 const isActive = ACTIVE_LABELS.includes(tf.label);
+                 const item = document.createElement('div');
+                 item.onclick = () => toggleNode(tf.label);
+                 item.className = `flex items-center gap-4 p-4 border-2 transition-all cursor-pointer ${isActive ? 'border-current bg-current/10' : 'opacity-30 border-current'}`;
+                 item.innerHTML = `
+                     <div class="w-5 h-5 border-2 border-current flex items-center justify-center">
+                         <div class="w-2.5 h-2.5 bg-current ${isActive ? 'opacity-100' : 'opacity-0'}"></div>
+                     </div>
+                     <span class="font-headline font-bold uppercase">${tf.label}</span>
+                 `;
+                 list.appendChild(item);
+             });
+         }
+         
+         function addNewPreset() {
+             const input = document.getElementById('tf-input').value.toLowerCase().trim();
+             const match = input.match(/^(\d+)([mhw])$/);
+             if (!match) return alert("USE FORMAT: 45M, 3H, 1W");
+             const val = parseInt(match[1]);
+             const unit = match[2];
+             let seconds = unit === 'm' ? val * 60 : unit === 'h' ? val * 3600 : val * 604800;
+             const label = input.toUpperCase();
+             if (!MASTER_TIMEFRAMES.find(t => t.label === label)) {
+                 MASTER_TIMEFRAMES.push({ label, s: seconds });
+                 MASTER_TIMEFRAMES.sort((a, b) => a.s - b.s);
+                 ACTIVE_LABELS.push(label);
+                 document.getElementById('tf-input').value = '';
+                 renderModalList();
+             }
+         }
+         
+         function toggleArm(index, label, activeCount) {
+             armedIndex = (armedIndex === index) ? null : index;
+             for(let j=0; j<activeCount; j++) {
+                 const dot = document.getElementById(`arm-dot-${j}`);
+                 if (dot) {
+                     if (currentTheme === 'chaos') {
+                         const col = CHAOS_COLORS[j % CHAOS_COLORS.length].hex;
+                         dot.style.backgroundColor = (armedIndex === j) ? col : 'transparent';
+                         dot.style.borderColor = (armedIndex === j) ? col : 'rgba(255,255,255,0.2)';
+                     } else {
+                         dot.style.backgroundColor = (armedIndex === j) ? '#2d422c' : 'transparent';
+                     }
+                 }
+             }
+             updateSessionDisplay();
+         }
+         
+         function triggerImpact(label) {
+             new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg").play().catch(() => {});
+             const banner = document.getElementById('session-banner');
+             const labelEl = document.getElementById('session-label');
+             banner.classList.add('alert-active');
+             labelEl.innerHTML = `!! IMPACT: ${label} !!`;
+             setTimeout(() => { banner.classList.remove('alert-active'); updateSessionDisplay(); }, 5000);
+         }
+         
+         function update() {
+             const now = Date.now() / 1000;
+             const activeData = MASTER_TIMEFRAMES.filter(t => ACTIVE_LABELS.includes(t.label));
+             activeData.forEach((tf, i) => {
+                 const rem = tf.s - (Math.floor(now) % tf.s);
+                 const h = Math.floor(rem / 3600), m = Math.floor((rem % 3600) / 60), s = Math.floor(rem % 60);
+                 const display = h > 0 ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}` : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+                 const tEl = document.getElementById(`time-${i}`);
+                 const bEl = document.getElementById(`bar-${i}`);
+                 if (tEl) tEl.textContent = display;
+                 if (bEl) bEl.style.width = (((tf.s - rem) / tf.s) * 100) + "%";
+                 if (armedIndex === i && rem === 1) { triggerImpact(tf.label); armedIndex = null; }
+             });
+             if (armedIndex === null) updateSessionDisplay();
+         }
+         
+         function updateSessionDisplay() {
+             const labelEl = document.getElementById('session-label'), bgEl = document.getElementById('session-bg');
+             if (armedIndex !== null) {
+                 const activeData = MASTER_TIMEFRAMES.filter(t => ACTIVE_LABELS.includes(t.label));
+                 labelEl.textContent = `ALERT_ARMED: ${activeData[armedIndex].label}`;
+                 bgEl.style.backgroundColor = currentTheme === 'zen' ? '#ffdad6' : '#ff51fa';
+                 return;
+             }
+             const now = new Date();
+             const min = now.getUTCHours() * 60 + now.getUTCMinutes();
+             let active = null;
+             SESSIONS.forEach(s => {
+                 const [sh, sm] = s.start.split(":").map(Number), [eh, em] = s.end.split(":").map(Number);
+                 const start = sh * 60 + sm, end = eh * 60 + em;
+                 if (start < end) { if (min >= start && min < end) active = s; }
+                 else { if (min >= start || min < end) active = s; }
+             });
+             if (active) {
+                 labelEl.textContent = `SESSION — ${active.name} ACTIVE`;
+                 bgEl.style.backgroundColor = currentTheme === 'zen' ? active.zen : active.chaos;
+               if (currentTheme === 'chaos') {
+         labelEl.style.color = "#000000"; // Makes text black in Chaos mode for high contrast
+         } else {
+         labelEl.style.color = ""; // Resets to Zen default
+         }
+             } else {
+                 labelEl.textContent = "MARKET — STANDBY";
+                 bgEl.style.backgroundColor = currentTheme === 'zen' ? '#fff' : '#222';
+             }
+         }
+         
+         function openModal() { renderModalList(); document.getElementById('add-modal').classList.remove('hidden'); }
+         function closeModal() { document.getElementById('add-modal').classList.add('hidden'); renderDashboard(); }
+         
+         renderDashboard();
+         setInterval(update, 1000);
+         update();
+      </script>
+   </body>
 </html>
