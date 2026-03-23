@@ -4,7 +4,11 @@
 
 > [!TIP]
 > # Example Image Of Online App
-> ![example](https://github.com/user-attachments/assets/ea3a4156-b1da-41fc-ab64-ed798b16601c)
+> ## Chaos Mode
+> <img width="1920" height="995" alt="image" src="https://github.com/user-attachments/assets/53c02dce-fecb-4e61-aea1-723406218296" />
+>
+> ## Zen Mode
+> <img width="1920" height="995" alt="image" src="https://github.com/user-attachments/assets/51638cdd-c0cb-4e0b-a292-67dffa9eb8a8" />
 
 ---
 
